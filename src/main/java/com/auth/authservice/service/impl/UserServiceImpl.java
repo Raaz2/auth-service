@@ -2,7 +2,9 @@ package com.auth.authservice.service.impl;
 
 import com.auth.authservice.dto.UserDto;
 import com.auth.authservice.model.Provider;
+import com.auth.authservice.model.Role;
 import com.auth.authservice.model.User;
+import com.auth.authservice.repository.RoleRepository;
 import com.auth.authservice.repository.UserRepository;
 import com.auth.authservice.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -13,11 +15,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
+    private final RoleRepository roleRepository;
     private final UserRepository userRepository; // final fields get autowired by default with constructor injection
     private final ModelMapper modelMapper;
     @Override
     public UserDto createUser(UserDto userDto) {
-        if (userDto.getEmail() == null || userDto.getEmail().isBlank()) {
+        if (userDto.getEmail() == null) {
             throw new IllegalArgumentException("Email is required");
         }
         if (userRepository.existsByEmail(userDto.getEmail())) {
@@ -31,8 +34,8 @@ public class UserServiceImpl implements UserService {
         //TODO:
         //assign the default role
 
-        Role role = roleRepository.findByName("ROLE_" + AppConstants.GUEST_ROLE).orElse(null);
-        user.getRoles().add(role);
+//        Role role = roleRepository.findByName("ROLE_" + AppConstants.GUEST_ROLE).orElse(null);
+//        user.getRoles().add(role);
 
 
 
