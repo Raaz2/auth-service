@@ -34,8 +34,8 @@ public class UserServiceImpl implements UserService {
         //TODO:
         //assign the default role
 
-//        Role role = roleRepository.findByName("ROLE_" + AppConstants.GUEST_ROLE).orElse(null);
-//        user.getRoles().add(role);
+        Role role = roleRepository.findByName("ROLE_" + AppConstants.GUEST_ROLE).orElse(null);
+        user.getRoles().add(role);
 
 
 
