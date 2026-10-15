@@ -7,6 +7,7 @@ import com.auth.authservice.model.User;
 import com.auth.authservice.repository.RoleRepository;
 import com.auth.authservice.repository.UserRepository;
 import com.auth.authservice.service.UserService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,10 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository; // final fields get autowired by default with constructor injection
     private final ModelMapper modelMapper;
+
+
     @Override
+    @Transactional
     public UserDto createUser(UserDto userDto) {
         if (userDto.getEmail() == null) {
             throw new IllegalArgumentException("Email is required");
@@ -34,8 +38,8 @@ public class UserServiceImpl implements UserService {
         //TODO:
         //assign the default role
 
-        Role role = roleRepository.findByName("ROLE_" + AppConstants.GUEST_ROLE).orElse(null);
-        user.getRoles().add(role);
+//        Role role = roleRepository.findByName("ROLE_" + AppConstants.GUEST_ROLE).orElse(null);
+//        user.getRoles().add(role);
 
 
 
@@ -66,6 +70,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Iterable<UserDto> getAllUsers() {
-        return null;
+        return userRepository
+                .findAll()
+                .stream()
+                .map(user -> modelMapper.map(user, UserDto.class))
+                .toList();
     }
 }
