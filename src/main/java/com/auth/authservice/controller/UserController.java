@@ -1,15 +1,11 @@
 package com.auth.authservice.controller;
 
 import com.auth.authservice.dto.UserDto;
-import com.auth.authservice.model.User;
 import com.auth.authservice.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -27,5 +23,10 @@ public class UserController {
     @GetMapping
     public ResponseEntity<Iterable<UserDto>> getUser() {
         return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+    @DeleteMapping
+    public void deleteUser(String userId) throws Exception {
+        userService.deleteUser(userId);
     }
 }

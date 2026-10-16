@@ -9,8 +9,11 @@ import com.auth.authservice.repository.UserRepository;
 import com.auth.authservice.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.log.UserDataHelper;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -59,8 +62,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(String userId) {
-
+    public void deleteUser(String userId) throws Exception {
+        UUID uId = UUID.fromString(userId);
+        User user = userRepository.findById(uId).orElseThrow(() -> new Exception(("User not found!")));
+        userRepository.delete(user);
     }
 
     @Override
