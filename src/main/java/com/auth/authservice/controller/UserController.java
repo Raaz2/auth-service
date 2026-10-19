@@ -29,4 +29,9 @@ public class UserController {
     public void deleteUser(String userId) throws Exception {
         userService.deleteUser(userId);
     }
+
+    @GetMapping("/{email}")
+    public ResponseEntity<UserDto> getByEmail(@PathVariable String email) throws Exception {
+        return ResponseEntity.status(HttpStatus.OK).body(userService.getUserByEmail(email));
+    }
 }

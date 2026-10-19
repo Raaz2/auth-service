@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
                         "Default role not found: " + DEFAULT_ROLE
                 ));
 
-        user.getRoles().add(defaultRole);
+        user.getRole().add(defaultRole);
 
         User savedUser = userRepository.save(user);
 
@@ -140,7 +140,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto getUserById(String userId) throws Exception {
-        UUID id = parseUserId(userId);
+        UUID id = UUID.fromString(userId);
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new Exception(
