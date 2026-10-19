@@ -1,3 +1,4 @@
+
 package com.auth.authservice.service.impl;
 
 import com.auth.authservice.dto.UserDto;
@@ -9,75 +10,152 @@ import com.auth.authservice.repository.UserRepository;
 import com.auth.authservice.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.util.log.UserDataHelper;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final RoleRepository roleRepository;
-    private final UserRepository userRepository; // final fields get autowired by default with constructor injection
-    private final ModelMapper modelMapper;
+    private static final String DEFAULT_ROLE = "ROLE_GUEST";
 
+    private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
 
     @Override
     @Transactional
     public UserDto createUser(UserDto userDto) {
-        if (userDto.getEmail() == null) {
-            throw new IllegalArgumentException("Email is required");
+        String email = (userDto.getEmail());
+
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException(
+                    "User with email already exists: " + email
+            );
         }
-        if (userRepository.existsByEmail(userDto.getEmail())) {
-            throw new IllegalArgumentException("User with given email already exists");
-        }
-        // if you have extra checks __put here...
+
         User user = modelMapper.map(userDto, User.class);
-        user.setProvider(userDto.getProvider() != null ? userDto.getProvider() : Provider.LOCAL);
-        //role assign here to user___for authorization
 
-        //TODO:
-        //assign the default role
+        user.setEmail(email);
+        user.setProvider(
+                userDto.getProvider() != null
+                        ? userDto.getProvider()
+                        : Provider.LOCAL
+        );
 
-//        Role role = roleRepository.findByName("ROLE_" + AppConstants.GUEST_ROLE).orElse(null);
-//        user.getRoles().add(role);
+        // Assign the default role.
+        Role defaultRole = roleRepository.findByName(DEFAULT_ROLE)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Default role not found: " + DEFAULT_ROLE
+                ));
 
-
-
+        user.getRoles().add(defaultRole);
 
         User savedUser = userRepository.save(user);
+
         return modelMapper.map(savedUser, UserDto.class);
     }
 
     @Override
-    public UserDto getUserByEmail(String email) {
-        return null;
+    public UserDto getUserByEmail(String email) throws Exception {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new Exception(
+                        "User not found with email: " + email
+                ));
+
+        return modelMapper.map(user, UserDto.class);
     }
 
     @Override
-    public UserDto updateUser(UserDto userDto, String userId) {
-        return null;
+    @Transactional
+    public UserDto updateUser(UserDto userDto, String userId) throws Exception {
+        UUID id = UUID.fromString(userId);
+
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new Exception(
+                        "User not found with ID: " + userId
+                ));
+
+        if (userDto == null) {
+            throw new IllegalArgumentException("User data is required");
+        }
+
+        // Check email uniqueness only when the email is being changed.
+        if (userDto.getEmail() != null && !userDto.getEmail().isBlank()) {
+            String newEmail = userDto.getEmail();
+
+            if (!newEmail.equalsIgnoreCase(existingUser.getEmail())
+                    && userRepository.existsByEmail(newEmail)) {
+                throw new IllegalArgumentException(
+                        "User with email already exists: " + newEmail
+                );
+            }
+
+            existingUser.setEmail(newEmail);
+        }
+
+        /*
+         * ModelMapper updates the existing entity instead of creating
+         * a new entity. Configure it to skip null properties so partial
+         * updates do not erase existing values.
+         *
+         * Email, provider, roles and ID are handled separately.
+         */
+        modelMapper.map(userDto, existingUser);
+
+        // Restore fields that must not be overwritten by the DTO.
+        existingUser.setId(id);
+
+        // Prevent an omitted provider from resetting the current provider.
+        if (userDto.getProvider() == null) {
+            // Keep the provider already present on the entity.
+            // See the ModelMapper configuration below.
+        }
+
+        User updatedUser = userRepository.save(existingUser);
+
+        return modelMapper.map(updatedUser, UserDto.class);
     }
 
     @Override
+    @Transactional
     public void deleteUser(String userId) throws Exception {
-        UUID uId = UUID.fromString(userId);
-        User user = userRepository.findById(uId).orElseThrow(() -> new Exception(("User not found!")));
+        UUID id = UUID.fromString(userId);
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new Exception(
+                        "User not found with ID: " + userId
+                ));
+
         userRepository.delete(user);
     }
 
     @Override
-    public UserDto getUserById(String userId) {
-        return null;
+    public UserDto getUserById(String userId) throws Exception {
+        UUID id = parseUserId(userId);
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new Exception(
+                        "User not found with ID: " + userId
+                ));
+
+        return modelMapper.map(user, UserDto.class);
     }
 
     @Override
+    @Transactional
     public Iterable<UserDto> getAllUsers() {
-        return userRepository
-                .findAll()
-                .stream()
+        List<User> users = userRepository.findAll();
+
+        return users.stream()
                 .map(user -> modelMapper.map(user, UserDto.class))
                 .toList();
     }

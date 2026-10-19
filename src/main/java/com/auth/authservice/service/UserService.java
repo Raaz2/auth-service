@@ -7,16 +7,16 @@ public interface UserService {
     UserDto createUser(UserDto userDto);
 
     //get user by email
-    UserDto getUserByEmail(String email);
+    UserDto getUserByEmail(String email) throws Exception;
 
     //update user
-    UserDto updateUser(UserDto userDto, String userId);
+    UserDto updateUser(UserDto userDto, String userId) throws Exception;
 
     //delete user
     void deleteUser(String userId) throws Exception;
 
     //get user by id
-    UserDto getUserById(String userId);
+    UserDto getUserById(String userId) throws Exception;
 
     //get all users
     Iterable<UserDto> getAllUsers();
