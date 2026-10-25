@@ -24,8 +24,8 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    @DeleteMapping
-    public void deleteUser(String userId) throws Exception {
+    @DeleteMapping("/delete/{userId}")
+    public void deleteUser(@PathVariable String userId) throws Exception {
         userService.deleteUser(userId);
     }
 
