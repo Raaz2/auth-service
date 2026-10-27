@@ -27,6 +27,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
 
+
     @Override
     @Transactional
     public UserDto createUser(UserDto userDto) {
@@ -54,7 +55,6 @@ public class UserServiceImpl implements UserService {
                 ));
 
         user.getRole().add(defaultRole);
-
         User savedUser = userRepository.save(user);
 
         return modelMapper.map(savedUser, UserDto.class);
